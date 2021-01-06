@@ -21,21 +21,18 @@ struct Device {
 }
 
 extension Device {
-    public var applications: [Application]? {
-        let applicationPath = URLHelper.deviceURLForUDID(self.UDID).appendingPathComponent("data/Containers/Bundle/Application")
-        let contents = try? FileManager.default.contentsOfDirectory(at: applicationPath, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsSubdirectoryDescendants, .skipsHiddenFiles])
-            return contents?
-                .filter({ (url) -> Bool in
-                    var isDirectoryObj: AnyObject?
-                    try? (url as NSURL).getResourceValue(&isDirectoryObj, forKey: URLResourceKey.isDirectoryKey)
-                    guard let isDirectory = isDirectoryObj as? Bool else {
-                        return false
-                    }
-                    return isDirectory
-                })
-                .map { Application(device: self, url: $0) }
-                .filter { $0 != nil }
-                .map { $0! }
+    public var applications: [Application] {
+        guard let applicationPath = .some(URLHelper.deviceURLForUDID(self.UDID).appendingPathComponent("data/Containers/Bundle/Application")),
+              let contents = try? FileManager.default.contentsOfDirectory(
+                at: applicationPath,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsSubdirectoryDescendants, .skipsHiddenFiles]
+            )
+        else { return [] }
+
+        return contents
+                .filter { (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false }
+                .compactMap { Application(device: self, url: $0) }
     }
     
     public var state: State {
@@ -87,5 +84,11 @@ extension Device: Decodable {
         case UDID = "udid"
         case name
         case stateValue = "state"
+    }
+}
+
+extension Device: Equatable {
+    static func == (lhs: Device, rhs: Device) -> Bool {
+        (lhs.name, lhs.UDID) == (rhs.name, rhs.UDID)
     }
 }

@@ -28,7 +28,7 @@ struct URLHelper {
     }
     
     static var deviceSetURL: URL {
-        return self.deviceURL.appendingPathComponent(deviceSetFileName)
+        return deviceURL.appendingPathComponent(deviceSetFileName)
     }
     
     static func deviceURLForUDID(_ UDID: String) -> URL {
