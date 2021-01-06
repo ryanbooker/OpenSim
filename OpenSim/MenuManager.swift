@@ -16,15 +16,10 @@ protocol MenuManagerDelegate {
 @objc final class MenuManager: NSObject, NSMenuDelegate {
     let statusItem: NSStatusItem
     var focusedMode: Bool = true
-    
-    var watcher: DirectoryWatcher!
-    
-    var subWatchers: [DirectoryWatcher?]?
-    
+    var watcher: DirectoryWatcher?
+    var subWatchers: [DirectoryWatcher] = []
     var block: dispatch_cancelable_block_t?
-    
     var delegate: MenuManagerDelegate?
-
     var menuObserver: CFRunLoopObserver?
     
     override init() {
@@ -47,63 +42,8 @@ protocol MenuManagerDelegate {
     }
     
     func stop() {
-        watcher.stop()
-        subWatchers?.forEach { $0?.stop() }
-    }
-    
-    private func buildWatcher() {
-        watcher = DirectoryWatcher(in: URLHelper.deviceURL)
-        watcher.completionCallback = { [weak self] in
-            self?.reloadWhenReady(delay: 5)
-            self?.buildSubWatchers()
-        }
-        try? watcher.start()
-    }
-    
-    private func buildSubWatchers() {
-        subWatchers?.forEach { $0?.stop() }
-        let deviceDirectories = try? FileManager.default.contentsOfDirectory(at: URLHelper.deviceURL as URL, includingPropertiesForKeys: FileInfo.prefetchedProperties, options: .skipsSubdirectoryDescendants)
-        subWatchers = deviceDirectories?.map(createSubWatcherForURL)
-    }
-    
-    private func createSubWatcherForURL(_ URL: Foundation.URL) -> DirectoryWatcher? {
-        guard let info = FileInfo(URL: URL), info.isDirectory else {
-            return nil
-        }
-        let watcher = DirectoryWatcher(in: URL)
-        watcher.completionCallback = { [weak self] in
-            self?.reloadWhenReady()
-        }
-        try? watcher.start()
-        return watcher
-    }
-
-    @objc private func toggleFocusedMode() {
-        focusedMode = !focusedMode
-        reloadWhenReady(delay: 0)
-    }
-    
-    private func reloadWhenReady(delay: TimeInterval = 1) {
-        dispatch_cancel_block_t(self.block)
-        self.block = dispatch_block_t(delay) { [weak self] in
-            self?.watcher.stop()
-            self?.buildMenu()
-            try? self?.watcher.start()
-        }
-    }
-    
-    @objc func quitItemClicked(_ sender: AnyObject) {
-        delegate?.shouldQuitApp()
-    }
-
-    @objc func refreshItemClicked(_ sender: AnyObject) {
-        reloadWhenReady()
-    }
-    
-    @objc func launchItemClicked(_ sender: NSMenuItem) {
-        let wasOn = sender.state == .on
-        sender.state = (wasOn ? .off : .on)
-        setLaunchAtLogin(itemUrl: Bundle.main.bundleURL, enabled: !wasOn)
+        watcher?.stop()
+        subWatchers.forEach { $0.stop() }
     }
     
     private func resetAllSimulators() {
@@ -133,28 +73,54 @@ protocol MenuManagerDelegate {
             device.factoryReset()
         }
     }
+}
 
-    @objc func factoryResetAllSimulators() {
-        let alert: NSAlert = NSAlert()
-        alert.messageText = String(format: UIConstants.strings.actionFactoryResetAllSimulatorsMessage)
-        alert.alertStyle = .critical
-        alert.addButton(withTitle: UIConstants.strings.actionFactoryResetAlertConfirmButton)
-        alert.addButton(withTitle: UIConstants.strings.actionFactoryResetAlertCancelButton)
-        let response = alert.runModal()
-        if response == NSApplication.ModalResponse.alertFirstButtonReturn {
-            resetAllSimulators()
+// MARK: - Build Watchers
+
+private extension MenuManager {
+    func buildWatcher() {
+        watcher = URLHelper.deviceURL.map {
+            DirectoryWatcher(in: $0) { [weak self] in
+                self?.reloadWhenReady(delay: 5)
+                self?.buildSubWatchers()
+            }
+        }
+
+        try? watcher?.start()
+    }
+
+    func buildSubWatchers() {
+        subWatchers.forEach { $0.stop() }
+
+        let deviceDirectories = URLHelper.deviceURL
+            .flatMap {
+                try? FileManager.default.contentsOfDirectory(
+                    at: $0,
+                    includingPropertiesForKeys: FileInfo.prefetchedProperties,
+                    options: .skipsSubdirectoryDescendants
+                )
+            } ?? []
+
+        subWatchers = deviceDirectories.compactMap(createSubWatcherForURL)
+        subWatchers.forEach { try? $0.start() }
+    }
+
+    func createSubWatcherForURL(_ URL: Foundation.URL) -> DirectoryWatcher? {
+        guard let info = FileInfo(URL: URL), info.isDirectory
+        else { return nil }
+
+        return DirectoryWatcher(in: URL) { [weak self] in
+            self?.reloadWhenReady()
         }
     }
 
-    @objc func factoryResetAllShutdownSimulators() {
-        let alert: NSAlert = NSAlert()
-        alert.messageText = String(format: UIConstants.strings.actionFactoryResetAllShutdownSimulatorsMessage)
-        alert.alertStyle = .critical
-        alert.addButton(withTitle: UIConstants.strings.actionFactoryResetAlertConfirmButton)
-        alert.addButton(withTitle: UIConstants.strings.actionFactoryResetAlertCancelButton)
-        let response = alert.runModal()
-        if response == NSApplication.ModalResponse.alertFirstButtonReturn {
-            resetShutdownSimulators()
+    func reloadWhenReady(delay: TimeInterval = 1) {
+        dispatch_cancel_block_t(block)
+        block = dispatch_block_t(delay) { [weak self] in
+            guard let self = self else { return }
+            self.watcher?.stop()
+            self.buildMenu()
+            try? self.watcher?.start()
         }
     }
 }
@@ -217,7 +183,7 @@ private extension MenuManager {
     var launchAtLoginItem: NSMenuItem {
         let item = menuItem(
             title: UIConstants.strings.menuLaunchAtLoginButton,
-            action: #selector(launchItemClicked)
+            action: #selector(toggleLaunchAtLogin)
         )
 
         item.state = existingItem(itemUrl: Bundle.main.bundleURL) != nil ? .on : .off
@@ -308,7 +274,7 @@ private extension MenuManager {
     var quitItem: NSMenuItem {
         menuItem(
             title: UIConstants.strings.menuQuitButton,
-            action: #selector(self.quitItemClicked(_:)),
+            action: #selector(self.quitItemClicked),
             keyEquivalent: "q"
         )
     }
@@ -317,5 +283,51 @@ private extension MenuManager {
         (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String)
             .map { "\(UIConstants.strings.menuVersionLabel) \($0)" }
             .map { menuItem(title: $0) }
+    }
+
+    // MARK: Menu Actions
+
+    @objc func toggleFocusedMode() {
+        focusedMode = !focusedMode
+        reloadWhenReady(delay: 0)
+    }
+
+    @objc func toggleLaunchAtLogin(_ sender: NSMenuItem) {
+        sender.state = sender.state == .on ? .off : .on
+        setLaunchAtLogin(itemUrl: Bundle.main.bundleURL, enabled: sender.state == .on)
+    }
+
+    @objc func quitItemClicked() {
+        delegate?.shouldQuitApp()
+    }
+
+    @objc func refreshItemClicked() {
+        reloadWhenReady()
+    }
+
+    @objc func factoryResetAllSimulators() {
+        let alert: NSAlert = NSAlert()
+        alert.messageText = String(format: UIConstants.strings.actionFactoryResetAllSimulatorsMessage)
+        alert.alertStyle = .critical
+        alert.addButton(withTitle: UIConstants.strings.actionFactoryResetAlertConfirmButton)
+        alert.addButton(withTitle: UIConstants.strings.actionFactoryResetAlertCancelButton)
+
+        let response = alert.runModal()
+        if response == NSApplication.ModalResponse.alertFirstButtonReturn {
+            resetAllSimulators()
+        }
+    }
+
+    @objc func factoryResetAllShutdownSimulators() {
+        let alert: NSAlert = NSAlert()
+        alert.messageText = String(format: UIConstants.strings.actionFactoryResetAllShutdownSimulatorsMessage)
+        alert.alertStyle = .critical
+        alert.addButton(withTitle: UIConstants.strings.actionFactoryResetAlertConfirmButton)
+        alert.addButton(withTitle: UIConstants.strings.actionFactoryResetAlertCancelButton)
+
+        let response = alert.runModal()
+        if response == NSApplication.ModalResponse.alertFirstButtonReturn {
+            resetShutdownSimulators()
+        }
     }
 }

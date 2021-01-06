@@ -9,7 +9,6 @@
 import Foundation
 
 struct URLHelper {
-    
     static let devicesPathComponent = "Developer/CoreSimulator/Devices/"
     static let applicationStatesComponent = "data/Library/FrontBoard/applicationState.plist"
     static let containersComponent = "data/Containers/Data/Application"
@@ -17,30 +16,25 @@ struct URLHelper {
     static let deviceSetFileName = "device_set.plist"
     static let deviceFileName = "device.plist"
     
-    static var deviceURL: URL {
-        get {
-            guard let libraryPath = NSSearchPathForDirectoriesInDomains(.libraryDirectory, .userDomainMask, true).first else {
-                // FIXME: Should throw an error instead
-                return URL(fileURLWithPath: "/")
-            }
-            return URL(fileURLWithPath: libraryPath).appendingPathComponent(devicesPathComponent)
-        }
+    static var deviceURL: URL? {
+        NSSearchPathForDirectoriesInDomains(.libraryDirectory, .userDomainMask, true)
+            .first
+            .map { URL(fileURLWithPath: $0).appendingPathComponent(devicesPathComponent) }
     }
     
-    static var deviceSetURL: URL {
-        return deviceURL.appendingPathComponent(deviceSetFileName)
+    static var deviceSetURL: URL? {
+        deviceURL?.appendingPathComponent(deviceSetFileName)
     }
     
-    static func deviceURLForUDID(_ UDID: String) -> URL {
-        return deviceURL.appendingPathComponent(UDID)
+    static func deviceURLForUDID(_ UDID: String) -> URL? {
+        deviceURL?.appendingPathComponent(UDID)
     }
     
-    static func applicationStateURLForUDID(_ UDID: String) -> URL {
-        return deviceURLForUDID(UDID).appendingPathComponent(applicationStatesComponent)
+    static func applicationStateURLForUDID(_ UDID: String) -> URL? {
+        deviceURLForUDID(UDID)?.appendingPathComponent(applicationStatesComponent)
     }
     
-    static func containersURLForUDID(_ UDID: String) -> URL {
-        return deviceURLForUDID(UDID).appendingPathComponent(containersComponent, isDirectory: true)
+    static func containersURLForUDID(_ UDID: String) -> URL? {
+        deviceURLForUDID(UDID)?.appendingPathComponent(containersComponent, isDirectory: true)
     }
-    
 }

@@ -9,29 +9,31 @@
 import Cocoa
 
 class SimulatorResetMenuItem: NSMenuItem {
+    let device: Device
 
-    var device: Device!
-
-    init(device:Device) {
+    init(device: Device) {
         self.device = device
 
-        let title = "\(UIConstants.strings.menuResetSimulatorButton) \(device.name)"
+        super.init(
+            title: "\(UIConstants.strings.menuResetSimulatorButton) \(device.name)",
+            action: #selector(self.resetSimulator),
+            keyEquivalent: ""
+        )
 
-        super.init(title: title, action: #selector(self.resetSimulator(_:)), keyEquivalent: "")
-
-        target = self
+        self.target = self
     }
 
     required init(coder decoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    @objc func resetSimulator(_ sender: AnyObject) {
+    @objc func resetSimulator() {
         let alert: NSAlert = NSAlert()
         alert.messageText = String(format: UIConstants.strings.actionFactoryResetAlertMessage, device.name)
         alert.alertStyle = .critical
         alert.addButton(withTitle: UIConstants.strings.actionFactoryResetAlertConfirmButton)
         alert.addButton(withTitle: UIConstants.strings.actionFactoryResetAlertCancelButton)
+
         let response = alert.runModal()
         if response == NSApplication.ModalResponse.alertFirstButtonReturn {
             SimulatorController.factoryReset(device)

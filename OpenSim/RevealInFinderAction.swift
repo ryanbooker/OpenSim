@@ -9,23 +9,17 @@
 import Cocoa
 
 final class RevealInFinderAction: ApplicationActionable {
-    
-    var application: Application?
-    
+    let application: Application
     let title = UIConstants.strings.actionRevealInFinder
-    
     let icon = templatize(#imageLiteral(resourceName: "reveal"))
-    
-    let isAvailable: Bool = true
     
     init(application: Application) {
         self.application = application
     }
     
     func perform() {
-        if let url = application?.sandboxUrl {
-            NSWorkspace.shared.open(url)
-        }
+        guard let url = application.sandboxUrl else { return }
+
+        NSWorkspace.shared.open(url)
     }
-    
 }

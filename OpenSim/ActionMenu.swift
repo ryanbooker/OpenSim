@@ -9,7 +9,6 @@
 import Cocoa
 
 final class ActionMenu: NSMenu {
-    
     private weak var application: Application!
     
     private static let standardActions: [ApplicationActionable.Type] = [
@@ -33,10 +32,9 @@ final class ActionMenu: NSMenu {
     }
     
     init(device: Device, application: Application) {
-        self.application = application
-        
         super.init(title: "")
-        
+
+        self.application = application
         buildMenuItems()
     }
     
@@ -47,22 +45,16 @@ final class ActionMenu: NSMenu {
     private func buildMenuItems() {
         let createAction: (ApplicationActionable.Type) -> ApplicationActionable = { $0.init(application: self.application) }
         
-        self.buildMenuSection(title: UIConstants.strings.menuHeaderActions, actions: ActionMenu.standardActions.map(createAction))
-        self.buildMenuSection(title: UIConstants.strings.menuHeaderExtensions, actions: ActionMenu.extraActions.map(createAction))
-        self.addItem(self.buildSectionTitle(title: UIConstants.strings.menuHeaderAppInformation))
-        self.addItem(appInfoItem)
+        buildMenuSection(title: UIConstants.strings.menuHeaderActions, actions: ActionMenu.standardActions.map(createAction))
+        buildMenuSection(title: UIConstants.strings.menuHeaderExtensions, actions: ActionMenu.extraActions.map(createAction))
+        addItem(buildSectionTitle(title: UIConstants.strings.menuHeaderAppInformation))
+        addItem(appInfoItem)
     }
     
     private func buildMenuSection(title: String, actions: [ApplicationActionable]) {
-        self.addItem(self.buildSectionTitle(title: title))
-        
-        actions.forEach { (action) in
-            if let item = buildMenuItem(for: action) {
-                self.addItem(item)
-            }
-        }
-        
-        self.addItem(NSMenuItem.separator())
+        addItem(buildSectionTitle(title: title))
+        actions.compactMap(buildMenuItem).forEach(addItem)
+        addItem(.separator())
     }
     
     private func buildSectionTitle(title: String) -> NSMenuItem {
@@ -71,10 +63,9 @@ final class ActionMenu: NSMenu {
         return titleItem
     }
     
-    private func buildMenuItem(`for` action: ApplicationActionable) -> NSMenuItem? {
-        if !action.isAvailable {
-            return nil
-        }
+    private func buildMenuItem(for action: ApplicationActionable) -> NSMenuItem? {
+        guard action.isAvailable else { return nil }
+        
         let item = NSMenuItem(title: action.title, action: #selector(actionMenuItemClicked(_:)), keyEquivalent: "")
         item.representedObject = action
         item.image = action.icon
@@ -85,5 +76,4 @@ final class ActionMenu: NSMenu {
     @objc private func actionMenuItemClicked(_ sender: NSMenuItem) {
         (sender.representedObject as? ApplicationActionable)?.perform()
     }
-    
 }
