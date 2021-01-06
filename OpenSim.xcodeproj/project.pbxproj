@@ -51,6 +51,8 @@
 		31A79B14219B81660024DF7B /* Simulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Simulator.swift; sourceTree = "<group>"; };
 		31C4BF3121A8AC56008B97A1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Localizable.strings; sourceTree = "<group>"; };
 		31C4BF3421A8AC72008B97A1 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		6DCF45F025A569AA0090D2EC /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		6DCF45F125A569B10090D2EC /* CHANGELOG.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CHANGELOG.md; sourceTree = "<group>"; };
 		78C2C79A2450FE5E007E4560 /* OpenUserDefaultsAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenUserDefaultsAction.swift; sourceTree = "<group>"; };
 		AF9D00391D110E750065AFD0 /* Helper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Helper.swift; sourceTree = "<group>"; };
 		B206711F2353ECAA00D6ED0D /* SimulatorShutdownMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatorShutdownMenuItem.swift; sourceTree = "<group>"; };
@@ -180,6 +182,8 @@
 		B3A1E3161BF049690090EC58 = {
 			isa = PBXGroup;
 			children = (
+				6DCF45F125A569B10090D2EC /* CHANGELOG.md */,
+				6DCF45F025A569AA0090D2EC /* README.md */,
 				B3A1E3211BF049690090EC58 /* OpenSim */,
 				B3A1E3201BF049690090EC58 /* Products */,
 			);
