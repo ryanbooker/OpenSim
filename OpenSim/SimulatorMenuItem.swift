@@ -9,21 +9,20 @@
 import Cocoa
 
 class SimulatorMenuItem: NSMenuItem {
-    var runtime: Runtime!
-    var device: Device!
+    let runtime: Runtime
+    let device: Device
     
-    init(runtime: Runtime, device:Device) {
+    init(runtime: Runtime, device: Device) {
         self.runtime = runtime
         self.device = device
-        
-        let title = "\(UIConstants.strings.menuLaunchSimulatorButton) \(device.name) (\(runtime))"
-        
-        super.init(title: title, action: #selector(self.openSimulator(_:)), keyEquivalent: "")
-        
-        target = self
 
-        // Default image
-        //self.image = #imageLiteral(resourceName: "DefaultAppIcon").appIcon()
+        super.init(
+            title: "\(UIConstants.strings.menuLaunchSimulatorButton) \(device.name) (\(runtime))",
+            action: #selector(self.openSimulator(_:)),
+            keyEquivalent: ""
+        )
+        
+        self.target = self
     }
     
     required init(coder decoder: NSCoder) {
@@ -31,6 +30,6 @@ class SimulatorMenuItem: NSMenuItem {
     }
     
     @objc func openSimulator(_ sender: AnyObject) {
-        self.device.launch()
+        device.launch()
     }
 }

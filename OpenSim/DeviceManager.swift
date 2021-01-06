@@ -9,18 +9,11 @@
 import Foundation
 
 final class DeviceManager {
-    
     static let devicesKey = "DefaultDevices"
     static let deviceRuntimePrefix = "com.apple.CoreSimulator.SimRuntime"
-    
     static let defaultManager = DeviceManager()
     
-    var runtimes = [Runtime]()
-    
-    func reload(callback: @escaping ([Runtime]) -> ()) {
-        SimulatorController.listDevices { (runtimes) in
-            self.runtimes = runtimes
-            callback(runtimes)
-        }
+    func reload(completion: @escaping ([Runtime]) -> ()) {
+        SimulatorController.listDevices(completion: completion)
     }
 }

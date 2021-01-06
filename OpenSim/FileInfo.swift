@@ -9,7 +9,6 @@
 import Foundation
 
 struct FileInfo {
-    
     static let prefetchedProperties: [URLResourceKey] = [
         .nameKey,
         .isDirectoryKey,
@@ -57,39 +56,35 @@ struct FileInfo {
         self.modificationDate = modificationDate
         self.fileSize = fileSize
     }
-    
 }
 
-extension FileInfo: Equatable {}
-
-func ==(lhs: FileInfo, rhs: FileInfo) -> Bool {
-    return lhs.name == rhs.name &&
-        lhs.isDirectory == rhs.isDirectory &&
-        lhs.creationDate == rhs.creationDate &&
-        lhs.modificationDate == rhs.modificationDate &&
-        lhs.fileSize == rhs.fileSize
-}
-
-func ==(lhs: FileInfo?, rhs: FileInfo?) -> Bool {
-    switch (lhs, rhs) {
-    case (.some(let lhs), .some(let rhs)):
-        return lhs == rhs
-    case (nil, nil):
-        // When two optionals are both nil, we consider them not equal
-        return false
-    default:
-        return false
+extension FileInfo: Equatable {
+    static func == (lhs: FileInfo, rhs: FileInfo) -> Bool {
+        lhs.name == rhs.name
+            && lhs.isDirectory == rhs.isDirectory
+            && lhs.creationDate == rhs.creationDate
+            && lhs.modificationDate == rhs.modificationDate
+            && lhs.fileSize == rhs.fileSize
     }
 }
 
-func !=(lhs: FileInfo?, rhs: FileInfo?) -> Bool {
-    return !(lhs == rhs)
+func == (lhs: FileInfo?, rhs: FileInfo?) -> Bool {
+    switch (lhs, rhs) {
+    case let (lhs?, rhs?): return lhs == rhs
+
+    // When two optionals are both nil, we consider them not equal
+    case _: return false
+    }
 }
 
-func ==(lhs: [FileInfo?], rhs: [FileInfo?]) -> Bool {
-    return lhs.elementsEqual(rhs) { $0 == $1 }
+func != (lhs: FileInfo?, rhs: FileInfo?) -> Bool {
+    !(lhs == rhs)
 }
 
-func !=(lhs: [FileInfo?], rhs: [FileInfo?]) -> Bool {
-    return !(lhs == rhs)
+func == (lhs: [FileInfo?], rhs: [FileInfo?]) -> Bool {
+    lhs.elementsEqual(rhs, by: ==)
+}
+
+func != (lhs: [FileInfo?], rhs: [FileInfo?]) -> Bool {
+    !(lhs == rhs)
 }

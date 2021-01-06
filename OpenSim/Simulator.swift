@@ -9,22 +9,15 @@
 import Foundation
 
 struct Simulator: Decodable {
-    private let rawData: [String: [Device]]
-    public let runtimes: [Runtime]
-    
+    let runtimes: [Runtime]
+
     enum CodingKeys: String, CodingKey {
-        case rawData = "devices"
-        case runtimes
+        case devices
     }
     
     init(from decoder: Decoder) throws {
-        let values = try decoder.container(keyedBy: CodingKeys.self)
-        rawData = try values.decode([String: [Device]].self, forKey: .rawData)
-        
-        var runtimeList: [Runtime] = []
-        for (key, devices) in rawData {
-            runtimeList.append(Runtime(name: key, devices: devices))
-        }
-        runtimes = runtimeList
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.runtimes = try container.decode([String: [Device]].self, forKey: .devices)
+            .map(Runtime.init)
     }
 }

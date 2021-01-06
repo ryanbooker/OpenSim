@@ -9,23 +9,17 @@
 import Cocoa
 
 final class OpenInTerminalAction: ApplicationActionable {
-    
-    var application: Application?
-    
+    let application: Application
     let title = UIConstants.strings.actionOpenInTerminal
-    
     let icon = templatize(#imageLiteral(resourceName: "terminal"))
-    
-    let isAvailable = true
     
     init(application: Application) {
         self.application = application
     }
     
     func perform() {
-        if let url = application?.sandboxUrl {
-            NSWorkspace.shared.openFile(url.path, withApplication: "Terminal")
-        }
+        guard let url = application.sandboxUrl else { return }
+
+        NSWorkspace.shared.openFile(url.path, withApplication: "Terminal")
     }
-    
 }

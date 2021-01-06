@@ -9,30 +9,24 @@
 import Cocoa
 
 class AppMenuItem: NSMenuItem {
-    
     private weak var application: Application!
     
     init(application: Application) {
+        super.init(title: "  \(application.bundleDisplayName)", action: nil, keyEquivalent: "")
         self.application = application
-        let title = "  \(application.bundleDisplayName)"
-        super.init(title: title, action: nil, keyEquivalent: "")
-        
+
         // Reverse the array to get the higher quality images first
-        for iconFile in application.iconFiles.reversed() {
-            if let bundle = Bundle(url: application.url) {
-                self.image = bundle.image(forResource: iconFile)?.appIcon()
-                if self.image != nil {
-                    return
-                }
-            }
-        }
-        
-        // Default image
-        self.image = #imageLiteral(resourceName: "DefaultAppIcon").appIcon()
+        self.image = Bundle(url: application.url)
+            .flatMap { bundle in
+                application.iconFiles
+                    .reversed()
+                    .compactMap { bundle.image(forResource: $0)?.appIcon() }
+                    .first
+
+            } ?? #imageLiteral(resourceName: "DefaultAppIcon").appIcon()
     }
     
     required init(coder decoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
 }

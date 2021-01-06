@@ -10,82 +10,41 @@ import Foundation
 import Cocoa
 
 final class Application {
-    var device: Device!
-    
+    static let sizeDispatchQueue = DispatchQueue(label: "com.pop-tap.size", attributes: .concurrent, target: nil)
+
+    let device: Device
     let bundleDisplayName: String
     let bundleID: String
     let bundleShortVersion: String
     let bundleVersion: String
     let url: URL
-    var iconFiles: [String] = []
-
+    let iconFiles: [String]
     var size: UInt64?
-    static let sizeDispatchQueue = DispatchQueue(label: "com.pop-tap.size", attributes: .concurrent, target: nil)
-    
-    var sandboxUrl: URL? {
-        guard let url = device.containerURLForApplication(self),
-            FileManager.default.fileExists(atPath: url.path)
-            else {
-                return nil
-        }
-        return url
-    }
+
+    var sandboxUrl: URL? { device.containerURLForApplication(self) }
 
     init?(device: Device, url: Foundation.URL) {
-        self.device = device
-        guard let contents = try? FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: [.skipsSubdirectoryDescendants, .skipsHiddenFiles]),
-            let url = contents.filter({ $0.absoluteString.hasSuffix(".app/") }).first // url ".app" diretory
-            else {
-                return nil
-        }
-        
-        let appInfoPath = url.appendingPathComponent("Info.plist")
-        
-        guard let appInfoDict = NSDictionary(contentsOf: appInfoPath),
-            let aBundleID = appInfoDict["CFBundleIdentifier"] as? String,
-            let aBundleDisplayName = (appInfoDict["CFBundleDisplayName"] as? String) ?? (appInfoDict["CFBundleName"] as? String),
-            let aBundleShortVersion = appInfoDict["CFBundleShortVersionString"] as? String,
-            let aBundleVersion = appInfoDict["CFBundleVersion"] as? String else {
-                return nil
-        }
+        guard let url = Application.appUrl(at: url),
+              let info = NSDictionary(contentsOf: url.appendingPathComponent("Info.plist")),
+              let bundleID = info["CFBundleIdentifier"] as? String,
+              let bundleDisplayName = (info["CFBundleDisplayName"] as? String)
+                                    ?? (info["CFBundleName"] as? String),
+              let bundleShortVersion = info["CFBundleShortVersionString"] as? String,
+              let bundleVersion = info["CFBundleVersion"] as? String
+        else { return nil }
 
+        self.device = device
         self.url = url
-        
-        bundleDisplayName = aBundleDisplayName
-        bundleID = aBundleID
-        bundleShortVersion = aBundleShortVersion
-        bundleVersion = aBundleVersion
-        
-        iconFiles = []
-        
-        // iPhone icons
-        if let bundleIcons = appInfoDict["CFBundleIcons"] as? NSDictionary {
-            if let bundlePrimaryIcon = bundleIcons["CFBundlePrimaryIcon"] as? NSDictionary {
-                if let bundleIconFiles = bundlePrimaryIcon["CFBundleIconFiles"] as? [String] {
-                    for iconFile in bundleIconFiles {
-                        iconFiles.append(iconFile)
-                        iconFiles.append(iconFile.appending("@2x"))
-                    }
-                }
-            }
-        }
-        
-        // iPad icons
-        if let bundleIcons = appInfoDict["CFBundleIcons~ipad"] as? NSDictionary {
-            if let bundlePrimaryIcon = bundleIcons["CFBundlePrimaryIcon"] as? NSDictionary {
-                if let bundleIconFiles = bundlePrimaryIcon["CFBundleIconFiles"] as? [String] {
-                    for iconFile in bundleIconFiles {
-                        iconFiles.append(iconFile.appending("~ipad"))
-                        iconFiles.append(iconFile.appending("@2x~ipad"))
-                    }
-                }
-            }
-        }
+        self.bundleDisplayName = bundleDisplayName
+        self.bundleID = bundleID
+        self.bundleShortVersion = bundleShortVersion
+        self.bundleVersion = bundleVersion
+        self.iconFiles = Application.iOSIcons(from: info) + Application.iPadOSIcons(from: info)
     }
     
-    func calcSize(block: @escaping (UInt64) -> Void) {
+    func calcSize(completion: @escaping (UInt64) -> Void) {
         if let size = size {
-            block(size)
+            completion(size)
         } else {
             Application.sizeDispatchQueue.async {
                 let duResult = shell("/usr/bin/du", arguments: ["-sk", self.url.path])
@@ -95,7 +54,7 @@ final class Application {
                     bytes = kbytes * 1000
                     self.size = bytes;
                 }
-                block(bytes)
+                completion(bytes)
             }
         }
     }
@@ -113,6 +72,36 @@ final class Application {
             SimulatorController.boot(self)
         }
         SimulatorController.uninstall(self)
+    }
+}
+
+private extension Application {
+    static func appUrl(at url: URL) -> URL? {
+        try? FileManager.default.contentsOfDirectory(
+                at: url,
+                includingPropertiesForKeys: nil,
+                options: [.skipsSubdirectoryDescendants, .skipsHiddenFiles]
+            )
+            .filter({ $0.absoluteString.hasSuffix(".app/") })
+            .first
+    }
+
+    static func iOSIcons(from info: NSDictionary) -> [String] {
+        guard let icons = info["CFBundleIcons"] as? NSDictionary,
+              let primaryIcon = icons["CFBundlePrimaryIcon"] as? NSDictionary,
+              let iconFiles = primaryIcon["CFBundleIconFiles"] as? [String]
+        else { return [] }
+
+        return iconFiles.flatMap { [$0, $0.appending("@2x")] }
+    }
+
+    static func iPadOSIcons(from info: NSDictionary) -> [String] {
+        guard let icons = info["CFBundleIcons~ipad"] as? NSDictionary,
+              let primaryIcon = icons["CFBundlePrimaryIcon"] as? NSDictionary,
+              let iconFiles = primaryIcon["CFBundleIconFiles"] as? [String]
+        else { return [] }
+
+        return iconFiles.flatMap { [$0.appending("~ipad"), $0.appending("@2x~ipad")] }
     }
 }
 

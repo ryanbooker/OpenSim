@@ -9,17 +9,15 @@
 import Cocoa
 
 protocol ApplicationActionable {
-    
-    init(application: Application)
-    
-    var application: Application? { get set }
-    
+    var application: Application { get }
     var title: String { get }
-    
     var icon: NSImage? { get }
-    
     var isAvailable: Bool { get }
-    
+
+    init(application: Application)
     func perform()
-    
+}
+
+extension ApplicationActionable {
+    var isAvailable: Bool { true }
 }

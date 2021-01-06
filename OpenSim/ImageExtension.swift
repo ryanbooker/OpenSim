@@ -20,23 +20,29 @@ func templatize(_ image: NSImage) -> NSImage? {
 }
 
 extension NSImage {
-    
     func appIcon() -> NSImage? {
-        guard self.isValid else {
-            return nil
-        }
-        let newImage = NSImage(size: IconImageConstants.size)
-        newImage.lockFocus()
-        self.size = IconImageConstants.size
+        guard isValid else { return nil }
+
+        let image = NSImage(size: IconImageConstants.size)
+        image.lockFocus()
+
+        size = IconImageConstants.size
+
         NSGraphicsContext.current?.imageInterpolation = .high
-        
         NSGraphicsContext.saveGraphicsState()
-        let path = NSBezierPath(roundedRect: NSRect(origin: NSPoint.zero, size: size), xRadius: IconImageConstants.cornerRadius, yRadius: IconImageConstants.cornerRadius)
+
+        let path = NSBezierPath(
+            roundedRect: NSRect(origin: .zero, size: size),
+            xRadius: IconImageConstants.cornerRadius,
+            yRadius: IconImageConstants.cornerRadius
+        )
+
         path.addClip()
-        self.draw(at: NSPoint.zero, from: NSRect(origin: NSPoint.zero, size: size), operation: .copy, fraction: 1.0)
+        draw(at: .zero, from: NSRect(origin: .zero, size: size), operation: .copy, fraction: 1.0)
+
         NSGraphicsContext.restoreGraphicsState()
         
-        newImage.unlockFocus()
-        return newImage
+        image.unlockFocus()
+        return image
     }
 }
