@@ -10,7 +10,6 @@ import Foundation
 import Cocoa
 
 final class Application {
-    
     var device: Device!
     
     let bundleDisplayName: String
@@ -114,5 +113,17 @@ final class Application {
             SimulatorController.boot(self)
         }
         SimulatorController.uninstall(self)
+    }
+}
+
+extension Application: Equatable {
+    static func == (lhs: Application, rhs: Application) -> Bool {
+        lhs.bundleDisplayName.lowercased() == rhs.bundleDisplayName.lowercased()
+    }
+}
+
+extension Application: Comparable {
+    static func < (lhs: Application, rhs: Application) -> Bool {
+        lhs.bundleDisplayName.lowercased() < rhs.bundleDisplayName.lowercased()
     }
 }

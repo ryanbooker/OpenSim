@@ -37,3 +37,15 @@ extension Runtime: CustomStringConvertible {
         return Float(versionString)
     }
 }
+
+extension Runtime: Equatable {
+    static func == (lhs: Runtime, rhs: Runtime) -> Bool {
+        lhs.name == rhs.name
+    }
+}
+
+extension Runtime: Comparable {
+    static func < (lhs: Runtime, rhs: Runtime) -> Bool {
+        (lhs.platform, lhs.version ?? 0) < (rhs.platform, rhs.version ?? 0)
+    }
+}

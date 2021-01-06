@@ -9,7 +9,6 @@
 import Cocoa
 
 class SimulatorMenuItem: NSMenuItem {
-
     var runtime: Runtime!
     var device: Device!
     

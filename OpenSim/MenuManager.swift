@@ -14,7 +14,6 @@ protocol MenuManagerDelegate {
 }
 
 @objc final class MenuManager: NSObject, NSMenuDelegate {
-    
     let statusItem: NSStatusItem
     var focusedMode: Bool = true
     
@@ -30,7 +29,7 @@ protocol MenuManagerDelegate {
     
     override init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem.image = NSImage(named: NSImage.Name(rawValue: "menubar"))
+        statusItem.image = NSImage(named: "menubar")
         statusItem.image!.isTemplate = true
         
         super.init()
@@ -52,110 +51,6 @@ protocol MenuManagerDelegate {
         subWatchers?.forEach { $0?.stop() }
     }
     
-    private func buildMenu() {
-        let menu = NSMenu()
-
-        menu.addItem(NSMenuItem.separator())
-
-        let refreshMenuItem = menu.addItem(withTitle: UIConstants.strings.menuRefreshButton, action: #selector(self.refreshItemClicked(_:)), keyEquivalent: "r")
-        refreshMenuItem.target = self
-
-        let focusedModeMenuItem = menu.addItem(withTitle: UIConstants.strings.menuFocusedModeButton, action: #selector(self.toggleFocusedMode), keyEquivalent: "")
-        focusedModeMenuItem.target = self
-        focusedModeMenuItem.state = self.focusedMode ? .on : .off
-
-        let launchAtLoginMenuItem = menu.addItem(withTitle: UIConstants.strings.menuLaunchAtLoginButton, action: #selector(self.launchItemClicked(_:)), keyEquivalent: "")
-        launchAtLoginMenuItem.target = self
-        if existingItem(itemUrl: Bundle.main.bundleURL) != nil {
-            launchAtLoginMenuItem.state = .on
-        } else {
-            launchAtLoginMenuItem.state = .off
-        }
-        
-        DeviceManager.defaultManager.reload { (runtimes) in
-            
-            var sortedList = [Runtime]()
-            _ = Dictionary(grouping: runtimes, by: { (runtime: Runtime) in
-                return runtime.platform
-            }).values.map({ (runtimeList: [Runtime]) -> [Runtime] in
-                return runtimeList.sorted { $0.version ?? 0.0 > $1.version ?? 0.0 }
-            }).forEach({ (list) in
-                sortedList.append(contentsOf: list)
-            })
-            sortedList.forEach { (runtime) in
-                var devices = runtime.devices
-                if self.focusedMode {
-                    devices = devices.filter { $0.state == .booted || $0.applications?.count ?? 0 > 0 }
-                }
-                if devices.count == 0 {
-                    return
-                }
-                menu.addItem(NSMenuItem.separator())
-                let titleItem = NSMenuItem(title: "\(runtime)", action: nil, keyEquivalent: "")
-                titleItem.isEnabled = false
-                menu.addItem(titleItem)
-
-                devices.forEach({ (device) in
-                    let deviceMenuItem = menu.addItem(withTitle: device.name, action: nil, keyEquivalent: "")
-                    deviceMenuItem.onStateImage = NSImage(named: NSImage.Name(rawValue: "active"))
-                    deviceMenuItem.offStateImage = NSImage(named: NSImage.Name(rawValue: "inactive"))
-                    deviceMenuItem.state = device.state == .booted ? .on : .off
-
-                    let submenu = NSMenu()
-                    submenu.delegate = self
-
-                    // Launch Simulator
-                    let simulatorItem = SimulatorMenuItem(runtime:runtime, device:device)
-                    submenu.addItem(simulatorItem)
-                    submenu.addItem(NSMenuItem.separator())
-                    
-                    // Sort applications by name
-                    let sortApplications = device.applications?.sorted(by: { (app1, app2) -> Bool in
-                        app1.bundleDisplayName.lowercased() < app2.bundleDisplayName.lowercased()
-                    })
-                    
-                    sortApplications?.forEach { app in
-                        let appMenuItem = AppMenuItem(application: app)
-                        appMenuItem.submenu = ActionMenu(device: device, application: app)
-                        submenu.addItem(appMenuItem)
-                    }
-                    deviceMenuItem.submenu = submenu
-
-                    // Simulator Shutdown/Reset
-                    submenu.addItem(NSMenuItem.separator())
-                    if device.state == .booted {
-                        submenu.addItem(SimulatorShutdownMenuItem(device: device))
-                    }
-                    if device.applications?.count ?? 0 > 0 {
-                        submenu.addItem(SimulatorResetMenuItem(device: device))
-                    }
-                    submenu.addItem(SimulatorEraseMenuItem(device: device))
-                })
-
-            }
-
-            menu.addItem(NSMenuItem.separator())
-
-            let eraseAllSimulators = menu.addItem(withTitle: UIConstants.strings.menuShutDownAllSimulators, action: #selector(self.factoryResetAllSimulators), keyEquivalent: "")
-            eraseAllSimulators.target = self
-
-            let eraseAllShutdownSimulators = menu.addItem(withTitle: UIConstants.strings.menuShutDownAllBootedSimulators, action: #selector(self.factoryResetAllShutdownSimulators), keyEquivalent: "")
-            eraseAllShutdownSimulators.target = self
-
-            menu.addItem(NSMenuItem.separator())
-            
-            let quitMenu = menu.addItem(withTitle: UIConstants.strings.menuQuitButton, action: #selector(self.quitItemClicked(_:)), keyEquivalent: "q")
-            quitMenu.target = self
-            
-            if let versionNumber = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
-                menu.addItem(NSMenuItem.separator())
-                menu.addItem(withTitle: "\(UIConstants.strings.menuVersionLabel) \(versionNumber)", action: nil, keyEquivalent: "")
-            }
-
-            self.statusItem.menu = menu
-        }
-    }
-
     private func buildWatcher() {
         watcher = DirectoryWatcher(in: URLHelper.deviceURL)
         watcher.completionCallback = { [weak self] in
@@ -214,7 +109,7 @@ protocol MenuManagerDelegate {
     private func resetAllSimulators() {
         DeviceManager.defaultManager.reload { (runtimes) in
             runtimes.forEach({ (runtime) in
-                let devices = runtime.devices.filter { $0.applications?.count ?? 0 > 0 }
+                let devices = runtime.devices.filter { $0.applications.count > 0 }
                 self.resetSimulators(devices)
             })
         }
@@ -223,7 +118,7 @@ protocol MenuManagerDelegate {
     private func resetShutdownSimulators() {
         DeviceManager.defaultManager.reload { (runtimes) in
             runtimes.forEach({ (runtime) in
-                var devices = runtime.devices.filter { $0.applications?.count ?? 0 > 0 }
+                var devices = runtime.devices.filter { $0.applications.count > 0 }
                 devices = devices.filter { $0.state == .shutdown }
                 self.resetSimulators(devices)
             })
@@ -262,5 +157,165 @@ protocol MenuManagerDelegate {
             resetShutdownSimulators()
         }
     }
-    
+}
+
+// MARK: - Build Menu
+
+private extension MenuManager {
+    func buildMenu() {
+        let menu = NSMenu()
+        menu.addItem(.separator())
+        menu.addItem(refreshItem)
+        menu.addItem(focusedModeItem)
+        menu.addItem(launchAtLoginItem)
+
+        DeviceManager.defaultManager.reload { [self] runtimes in
+            runtimes.sorted().flatMap(runtimeItems)
+                .forEach(menu.addItem)
+
+            menu.addItem(.separator())
+            menu.addItem(eraseAllSimulatorsItem)
+            menu.addItem(eraseAllShutdownSimulatorsItem)
+            menu.addItem(.separator())
+            menu.addItem(quitItem)
+
+            versionItem.map { versionItem in
+                menu.addItem(.separator())
+                menu.addItem(versionItem)
+            }
+
+            statusItem.menu = menu
+        }
+    }
+
+    // MARK: Menu Helpers
+
+    func menuItem(title: String, action selector: Selector? = nil, keyEquivalent key: String = "") -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: selector, keyEquivalent: key)
+        item.target = self
+        return item
+    }
+
+    var refreshItem: NSMenuItem {
+        menuItem(
+            title: UIConstants.strings.menuRefreshButton,
+            action: #selector(refreshItemClicked),
+            keyEquivalent: "r"
+        )
+    }
+
+    var focusedModeItem: NSMenuItem {
+        let item = menuItem(
+            title: UIConstants.strings.menuFocusedModeButton,
+            action: #selector(toggleFocusedMode)
+        )
+
+        item.state = self.focusedMode ? .on : .off
+        return item
+    }
+
+    var launchAtLoginItem: NSMenuItem {
+        let item = menuItem(
+            title: UIConstants.strings.menuLaunchAtLoginButton,
+            action: #selector(launchItemClicked)
+        )
+
+        item.state = existingItem(itemUrl: Bundle.main.bundleURL) != nil ? .on : .off
+        return item
+    }
+
+    func titleItem(_ title: String) -> NSMenuItem {
+        let item = menuItem(title: title)
+        item.isEnabled = false
+        return item
+    }
+
+    func appItem(for device: Device) -> (Application) -> NSMenuItem {
+        { app in
+            let item = AppMenuItem(application: app)
+            item.submenu = ActionMenu(device: device, application: app)
+            return item
+        }
+    }
+
+    func simulatorShutdownItem(for device: Device) -> NSMenuItem? {
+        device.state == .booted
+            ? SimulatorShutdownMenuItem(device: device)
+            : nil
+    }
+
+    func simulatorResetItem(for device: Device) -> NSMenuItem? {
+        device.applications.count > 0
+            ? SimulatorResetMenuItem(device: device)
+            : nil
+    }
+
+    func deviceItemSubmenu(runtime: Runtime, device: Device) -> NSMenu {
+        let submenu = NSMenu()
+        submenu.delegate = self
+
+        submenu.addItem(SimulatorMenuItem(runtime: runtime, device: device))
+        submenu.addItem(.separator())
+
+        device.applications.sorted()
+            .map(appItem(for: device))
+            .forEach(submenu.addItem)
+
+        submenu.addItem(.separator())
+        simulatorShutdownItem(for: device).map(submenu.addItem)
+        simulatorResetItem(for: device).map(submenu.addItem)
+        submenu.addItem(SimulatorEraseMenuItem(device: device))
+
+        return submenu
+    }
+
+    func deviceItem(for runtime: Runtime) -> (Device) -> NSMenuItem {
+        { [self] device in
+            let item = NSMenuItem(title: device.name, action: nil, keyEquivalent: "")
+            item.onStateImage = NSImage(named: "active")
+            item.offStateImage = NSImage(named: "inactive")
+            item.state = device.state == .booted ? .on : .off
+            item.submenu = deviceItemSubmenu(runtime: runtime, device: device)
+
+            return item
+        }
+    }
+
+    func runtimeItems(for runtime: Runtime) -> [NSMenuItem] {
+        let devices = focusedMode
+            ? runtime.devices.filter { $0.state == .booted || $0.applications.count > 0 }
+            : runtime.devices
+
+        return devices.count > 0
+            ? [.separator(), titleItem(runtime.description)] + devices.map(deviceItem(for: runtime))
+            : []
+    }
+
+    var eraseAllSimulatorsItem: NSMenuItem {
+        menuItem(
+            title: UIConstants.strings.menuShutDownAllSimulators,
+            action: #selector(self.factoryResetAllSimulators)
+        )
+    }
+
+    var eraseAllShutdownSimulatorsItem: NSMenuItem {
+        menuItem(
+            title: UIConstants.strings.menuShutDownAllBootedSimulators,
+            action: #selector(self.factoryResetAllShutdownSimulators)
+        )
+    }
+
+    var quitItem: NSMenuItem {
+        menuItem(
+            title: UIConstants.strings.menuQuitButton,
+            action: #selector(self.quitItemClicked(_:)),
+            keyEquivalent: "q"
+        )
+    }
+
+    var versionItem: NSMenuItem? {
+        (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String)
+            .map { "\(UIConstants.strings.menuVersionLabel) \($0)" }
+            .map { menuItem(title: $0) }
+    }
 }
