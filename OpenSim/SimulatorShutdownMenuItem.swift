@@ -9,17 +9,18 @@
 import Cocoa
 
 class SimulatorShutdownMenuItem: NSMenuItem {
+    let device: Device
 
-    var device: Device!
-
-    init(device:Device) {
+    init(device: Device) {
         self.device = device
 
-        let title = "\(UIConstants.strings.menuShutdownSimulatorButton) \(device.name)"
+        super.init(
+            title: "\(UIConstants.strings.menuShutdownSimulatorButton) \(device.name)",
+            action: #selector(self.shutdownSimulator(_:)),
+            keyEquivalent: ""
+        )
 
-        super.init(title: title, action: #selector(self.shutdownSimulator(_:)), keyEquivalent: "")
-
-        target = self
+        self.target = self
     }
 
     required init(coder decoder: NSCoder) {

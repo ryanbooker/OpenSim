@@ -9,22 +9,15 @@
 import Cocoa
 
 final class LaunchAction: ApplicationActionable {
-    var application: Application?
-    
+    let application: Application
     let title = UIConstants.strings.actionLaunch
-    
     let icon = templatize(#imageLiteral(resourceName: "launch"))
-    
-    let isAvailable = true
     
     init(application: Application) {
         self.application = application
     }
     
     func perform() {
-        guard let application = application else {
-            return
-        }
         application.launch()
     }
 }

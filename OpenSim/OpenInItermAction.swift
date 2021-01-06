@@ -9,11 +9,8 @@
 import Cocoa
 
 class OpenInItermAction: ExtraApplicationActionable {
-    
-    var application: Application?
-    
+    let application: Application
     let appBundleIdentifier = "com.googlecode.iterm2"
-    
     let title = UIConstants.strings.extensionOpenInIterm
     
     required init(application: Application) {
@@ -21,9 +18,7 @@ class OpenInItermAction: ExtraApplicationActionable {
     }
     
     func perform() {
-        if let url = application?.sandboxUrl {
-            NSWorkspace.shared.openFile(url.path, withApplication: "iTerm")
-        }
+        guard let path = application.sandboxUrl?.path else { return }
+        NSWorkspace.shared.openFile(path, withApplication: "iTerm")
     }
-    
 }

@@ -9,19 +9,16 @@
 import Cocoa
 
 protocol ExtraApplicationActionable: ApplicationActionable {
-    
     var appBundleIdentifier: String { get }
-    
 }
 
 extension ExtraApplicationActionable {
-    
     var appPath: String? {
-        return NSWorkspace.shared.absolutePathForApplication(withBundleIdentifier: appBundleIdentifier)
+        NSWorkspace.shared.absolutePathForApplication(withBundleIdentifier: appBundleIdentifier)
     }
     
     var icon: NSImage? {
-        return appPath.flatMap { (path) -> NSImage? in
+        appPath.flatMap { path in
             let image = NSWorkspace.shared.icon(forFile: path)
             image.size = NSSize(width: 16, height: 16)
             return image
@@ -29,7 +26,6 @@ extension ExtraApplicationActionable {
     }
     
     var isAvailable: Bool {
-        return appPath != nil
+        appPath != nil
     }
-    
 }

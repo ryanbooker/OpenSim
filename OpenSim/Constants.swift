@@ -2,7 +2,6 @@
 import Foundation
 
 struct UIConstants {
-    
     struct strings {
         static let menuQuitButton = NSLocalizedString("Menu.Quit", comment: "Quit menu button")
         static let menuLaunchAtLoginButton = NSLocalizedString("Menu.LaunchAtLogin", comment: "Launch at login menu button")

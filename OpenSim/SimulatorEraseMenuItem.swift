@@ -9,29 +9,31 @@
 import Cocoa
 
 class SimulatorEraseMenuItem: NSMenuItem {
+    let device: Device
 
-    var device: Device!
-
-    init(device:Device) {
+    init(device: Device) {
         self.device = device
 
-        let title = "\(UIConstants.strings.menuDeleteSimulatorButton) \(device.name)"
+        super.init(
+            title: "\(UIConstants.strings.menuDeleteSimulatorButton) \(device.name)",
+            action: #selector(self.deleteSimulator),
+            keyEquivalent: ""
+        )
 
-        super.init(title: title, action: #selector(self.deleteSimulator(_:)), keyEquivalent: "")
-
-        target = self
+        self.target = self
     }
 
     required init(coder decoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    @objc func deleteSimulator(_ sender: AnyObject) {
+    @objc func deleteSimulator() {
         let alert: NSAlert = NSAlert()
         alert.messageText = String(format: UIConstants.strings.actionDeleteSimulatorAlertMessage, device.name)
         alert.alertStyle = .critical
         alert.addButton(withTitle: UIConstants.strings.actionDeleteSimulatorAlertConfirmButton)
         alert.addButton(withTitle: UIConstants.strings.actionDeleteSimulatorAlertCancelButton)
+
         let response = alert.runModal()
         if response == NSApplication.ModalResponse.alertFirstButtonReturn {
             SimulatorController.delete(device)

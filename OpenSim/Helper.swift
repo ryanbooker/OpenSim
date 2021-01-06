@@ -8,6 +8,7 @@
 
 import Foundation
 
+@discardableResult
 func shell(_ launchPath: String, arguments: [String]) -> String {
     let progress = Process()
     progress.launchPath = launchPath

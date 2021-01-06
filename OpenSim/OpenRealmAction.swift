@@ -9,30 +9,22 @@
 import Cocoa
 
 final class OpenRealmAction: ExtraApplicationActionable {
-    
-    var application: Application?
-    
+    let application: Application
     let appBundleIdentifier = "io.realm.realmbrowser"
-    
     let title = UIConstants.strings.extensionOpenRealmDatabase
-    
+    let realmPath: String?
+
     var isAvailable: Bool {
-        return appPath != nil && realmPath != nil
+        appPath != nil && realmPath != nil
     }
-    
-    var realmPath: String?
-    
+
     init(application: Application) {
         self.application = application
-        
-        if let sandboxUrl = application.sandboxUrl,
-            let enumerator = FileManager.default.enumerator(at: sandboxUrl, includingPropertiesForKeys: nil) {
-            while let fileUrl = enumerator.nextObject() as? URL {
-                if fileUrl.pathExtension.lowercased() == "realm" {
-                    realmPath = fileUrl.path
-                }
-            }
-        }
+        self.realmPath = application.sandboxUrl
+            .flatMap { try? FileManager.default.contentsOfDirectory(at: $0, includingPropertiesForKeys: nil) }?
+            .filter { $0.pathExtension.lowercased() == "realm" }
+            .first?
+            .path
     }
     
     func perform() {
@@ -40,5 +32,4 @@ final class OpenRealmAction: ExtraApplicationActionable {
             NSWorkspace.shared.openFile(realmPath, withApplication: "Realm Browser")
         }
     }
-    
 }

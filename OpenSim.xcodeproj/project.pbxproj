@@ -11,6 +11,7 @@
 		312A27FD21A753E600699668 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 312A27FC21A753E600699668 /* Constants.swift */; };
 		31A79B15219B81660024DF7B /* Simulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A79B14219B81660024DF7B /* Simulator.swift */; };
 		31C4BF3221A8AC56008B97A1 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 31C4BF3021A8AC56008B97A1 /* Localizable.strings */; };
+		6DCBEB8425A5BC180028BA2B /* Device.State.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DCBEB8325A5BC180028BA2B /* Device.State.swift */; };
 		78C2C79B2450FE5E007E4560 /* OpenUserDefaultsAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78C2C79A2450FE5E007E4560 /* OpenUserDefaultsAction.swift */; };
 		AF9D003A1D110E750065AFD0 /* Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF9D00391D110E750065AFD0 /* Helper.swift */; };
 		B20671202353ECAA00D6ED0D /* SimulatorShutdownMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B206711F2353ECAA00D6ED0D /* SimulatorShutdownMenuItem.swift */; };
@@ -51,6 +52,7 @@
 		31A79B14219B81660024DF7B /* Simulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Simulator.swift; sourceTree = "<group>"; };
 		31C4BF3121A8AC56008B97A1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Base; path = Base.lproj/Localizable.strings; sourceTree = "<group>"; };
 		31C4BF3421A8AC72008B97A1 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		6DCBEB8325A5BC180028BA2B /* Device.State.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.State.swift; sourceTree = "<group>"; };
 		78C2C79A2450FE5E007E4560 /* OpenUserDefaultsAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenUserDefaultsAction.swift; sourceTree = "<group>"; };
 		AF9D00391D110E750065AFD0 /* Helper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Helper.swift; sourceTree = "<group>"; };
 		B206711F2353ECAA00D6ED0D /* SimulatorShutdownMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatorShutdownMenuItem.swift; sourceTree = "<group>"; };
@@ -123,6 +125,7 @@
 				B3F493A51BF0822800C64FF0 /* Application.swift */,
 				31A79B14219B81660024DF7B /* Simulator.swift */,
 				B3A1E3311BF062C40090EC58 /* Device.swift */,
+				6DCBEB8325A5BC180028BA2B /* Device.State.swift */,
 				B3D188E81BF436480064E851 /* Runtime.swift */,
 				B3A1E32F1BF05F980090EC58 /* DeviceManager.swift */,
 				B3054E161BF381CE00F433C2 /* FileInfo.swift */,
@@ -306,6 +309,7 @@
 				B3A1E3301BF05F980090EC58 /* DeviceManager.swift in Sources */,
 				312A27FD21A753E600699668 /* Constants.swift in Sources */,
 				B3A1E3231BF049690090EC58 /* AppDelegate.swift in Sources */,
+				6DCBEB8425A5BC180028BA2B /* Device.State.swift in Sources */,
 				B39B2B6F1EBF567F00CDD74C /* CopyToPasteboardAction.swift in Sources */,
 				B39B2B731EBF573C00CDD74C /* UninstallAction.swift in Sources */,
 				B3054E1A1BF3958500F433C2 /* DirectoryWatcher.swift in Sources */,

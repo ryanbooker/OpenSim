@@ -8,23 +8,17 @@
 
 import Foundation
 
-enum State {
-    case shutdown
-    case booted
-    case unknown
-}
-
 struct Device {
-    private let stateValue: String
-    public let name: String
-    public let UDID: String
+    let name: String
+    let UDID: String
+    let state: State
 }
 
 extension Device {
-    public var applications: [Application] {
-        guard let applicationPath = .some(URLHelper.deviceURLForUDID(self.UDID).appendingPathComponent("data/Containers/Bundle/Application")),
+    var applications: [Application] {
+        guard let path = URLHelper.deviceURLForUDID(UDID)?.appendingPathComponent("data/Containers/Bundle/Application"),
               let contents = try? FileManager.default.contentsOfDirectory(
-                at: applicationPath,
+                at: path,
                 includingPropertiesForKeys: [.isDirectoryKey],
                 options: [.skipsSubdirectoryDescendants, .skipsHiddenFiles]
             )
@@ -34,28 +28,24 @@ extension Device {
                 .filter { (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false }
                 .compactMap { Application(device: self, url: $0) }
     }
-    
-    public var state: State {
-        switch stateValue {
-        case "Booted":
-            return .booted
-        case "Shutdown":
-            return .shutdown
-        default:
-            return .unknown
-        }
-    }
-    
-    public func containerURLForApplication(_ application: Application) -> URL? {
-        let URL = URLHelper.containersURLForUDID(UDID)
-        let directories = try? FileManager.default.contentsOfDirectory(at: URL, includingPropertiesForKeys: nil, options: .skipsSubdirectoryDescendants)
-        return directories?.filter({ (dir) -> Bool in
-            if let contents = NSDictionary(contentsOf: dir.appendingPathComponent(".com.apple.mobile_container_manager.metadata.plist")),
-                let identifier = contents["MCMMetadataIdentifier"] as? String, identifier == application.bundleID {
-                return true
+
+    func containerURLForApplication(_ application: Application) -> URL? {
+        let directories = URLHelper.containersURLForUDID(UDID)
+            .flatMap {
+                try? FileManager.default.contentsOfDirectory(
+                   at: $0,
+                   includingPropertiesForKeys: nil,
+                   options: .skipsSubdirectoryDescendants
+               )
+            } ?? []
+
+        return directories
+            .filter { url in
+                let metadataUrl = url.appendingPathComponent(".com.apple.mobile_container_manager.metadata.plist")
+                let metadataIdentifier = NSDictionary(contentsOf: metadataUrl)?["MCMMetadataIdentifier"] as? String
+                return metadataIdentifier == application.bundleID && FileManager.default.fileExists(atPath: url.path)
             }
-            return false
-        }).first
+            .first
     }
     
     func launch() {
@@ -83,7 +73,7 @@ extension Device: Decodable {
     enum CodingKeys: String, CodingKey {
         case UDID = "udid"
         case name
-        case stateValue = "state"
+        case state
     }
 }
 
