@@ -43,7 +43,9 @@ final class ActionMenu: NSMenu {
     }
     
     private func buildMenuItems() {
-        let createAction: (ApplicationActionable.Type) -> ApplicationActionable = { $0.init(application: self.application) }
+        let createAction: (ApplicationActionable.Type) -> ApplicationActionable = {
+            $0.init(application: self.application)
+        }
         
         buildMenuSection(title: UIConstants.strings.menuHeaderActions, actions: ActionMenu.standardActions.map(createAction))
         buildMenuSection(title: UIConstants.strings.menuHeaderExtensions, actions: ActionMenu.extraActions.map(createAction))
