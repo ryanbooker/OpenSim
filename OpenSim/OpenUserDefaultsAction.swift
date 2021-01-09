@@ -11,6 +11,8 @@ final class OpenUserDefaultsAction: ApplicationActionable {
     let title = UIConstants.strings.actionOpenUserDefaults
     let icon = templatize(#imageLiteral(resourceName: "userDefaults"))
     let userDefaultsPath: String?
+
+    var isAvailable: Bool { userDefaultsPath != nil }
     
     init(application: Application) {
         self.application = application
