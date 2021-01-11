@@ -17,7 +17,9 @@ struct Simulator: Decodable {
     
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.runtimes = try container.decode([String: [Device]].self, forKey: .devices)
+
+        self.runtimes = try container
+            .decode([String: [Device]].self, forKey: .devices)
             .map(Runtime.init)
     }
 }

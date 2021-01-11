@@ -10,8 +10,9 @@ import Foundation
 
 extension Device {
     enum State: String {
-        case shutdown = "Shutdown"
+        case creating = "Creating"
         case booted = "Booted"
+        case shutdown = "Shutdown"
         case unknown = "Unknown"
     }
 }

@@ -47,14 +47,17 @@ struct SimulatorController {
     }
     
     static func listDevices(completion: @escaping ([Runtime]) -> ()) {
-        getDevicesJson(currentAttempt: 0) {
-            completion(
-                $0.data(using: String.Encoding.utf8)
-                    .flatMap {
-                        try? JSONDecoder().decode(Simulator.self, from: $0)
-                            .runtimes.filter { $0.devices.count > 0 }
-                    } ?? []
-            )
+        getDevicesJson(currentAttempt: 0) { json in
+            let runtimes = json
+                .data(using: .utf8)
+                .flatMap {
+                    try? JSONDecoder()
+                        .decode(Simulator.self, from: $0)
+                        .runtimes
+                        .filter { $0.devices.count > 0 }
+                }
+
+            completion(runtimes ?? [])
         }
     }
 }
