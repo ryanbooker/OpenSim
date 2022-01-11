@@ -247,10 +247,9 @@
 			};
 			buildConfigurationList = B3A1E31A1BF049690090EC58 /* Build configuration list for PBXProject "OpenSim" */;
 			compatibilityVersion = "Xcode 12.0";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				English,
 				en,
 				Base,
 				"pt-BR",
@@ -464,7 +463,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.5.0;
+				MARKETING_VERSION = 0.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.pop-tap.OpenSim";
 				PRODUCT_NAME = OpenSim;
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
@@ -482,7 +481,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.5.0;
+				MARKETING_VERSION = 0.5.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.pop-tap.OpenSim";
 				PRODUCT_NAME = OpenSim;
 				SWIFT_COMPILATION_MODE = wholemodule;
